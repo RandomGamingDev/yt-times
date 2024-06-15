@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+  "name": "Youtube Times",
+  "version": "1.0",
+
+  "description": "Replaces the undescriptive youtube time with the exact absolute time of release",
+
+  "icons": {
+    "48": "icons/icon-48.png"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["main.js"]
+    }
+  ]
+}
