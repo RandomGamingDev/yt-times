@@ -1,5 +1,8 @@
 const parser = new DOMParser();
 
+// Gets date published from video's page
+const get_date_published = (html) => new Date(Date.parse(html.querySelectorAll("[itemprop='datePublished']")[0].getAttribute("content")))
+
 function replace_video_type_date(rel_elems, get_vid_id, get_date_elem) {
     const absDateClass = "absolute-date";
 
@@ -10,7 +13,7 @@ function replace_video_type_date(rel_elems, get_vid_id, get_date_elem) {
                 .then(res => res.text())
                 .then(txt => {
                     const html = parser.parseFromString(txt, "text/html");
-                    const date = new Date(Date.parse(html.querySelectorAll("[itemprop='datePublished']")[0].getAttribute("content")));
+                    const date = get_date_published(html);
                     const str_date = date.toLocaleString();
 
                     date_elem.innerHTML = str_date;
@@ -85,6 +88,13 @@ function replace_dates() { // IMPORTANT!!! Find out when to activate this (after
                 .children[2] // yt-formatted-string id="video-info"
                 .children[2] // span
     );
+
+    for (const info_elem of document.querySelectorAll("yt-formatted-string#info"))
+        info_elem
+            .children[2] // Relative timestamp
+            .innerHTML =
+                get_date_published(document)
+                    .toLocaleString();
 }
 
 let DOMMutated = false;
