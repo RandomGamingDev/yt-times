@@ -89,6 +89,21 @@ function replace_dates() { // IMPORTANT!!! Find out when to activate this (after
                 .children[2] // span
     );
 
+    // Channel Home page videos
+    replace_video_type_date(
+        document.querySelectorAll("a#video-title"),
+        rel_elem => 
+            rel_elem.getAttribute("href"),
+        rel_elem => 
+            rel_elem
+                .parentElement // h3
+                .parentElement // div id="meta"
+                .children[1] // div id="metadata-container"
+                .children[0] // div id="metadata"
+                .children[1] // div id="metadata-line"
+                .children[1] // span
+    );
+
     for (const info_elem of document.querySelectorAll("yt-formatted-string#info"))
         info_elem
             .children[2] // Relative timestamp
