@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Youtube Times",
-  "version": "1.0.2",
+  "version": "1.0.3",
 
   "description": "Replaces the undescriptive youtube time with the exact absolute time of release",
 
