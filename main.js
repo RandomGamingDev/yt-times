@@ -104,12 +104,13 @@ function replace_dates() { // IMPORTANT!!! Find out when to activate this (after
                 .children[1] // span
     );
 
-    for (const info_elem of document.querySelectorAll("yt-formatted-string#info"))
+    for (const info_elem of document.querySelectorAll("yt-formatted-string#info")) try {
         info_elem
             .children[2] // Relative timestamp
             .innerHTML =
                 get_date_published(document)
                     .toLocaleString();
+    } catch {}
 }
 
 let DOMMutated = false;
