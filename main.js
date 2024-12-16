@@ -4,10 +4,13 @@ const parser = new DOMParser();
 const get_date_published = (html) => new Date(Date.parse(html.querySelectorAll("[itemprop='datePublished']")[0].getAttribute("content")))
 
 function format_date(date, options) {
+    // Helper function to ensure two-digit format
+    const padZero = (num) => num.toString().padStart(2, '0');
+
     // format date
-    let day = date.getDate();
-    let month = date.getMonth() + 1;
-    let year = date.getFullYear();
+    let day = padZero(date.getDate());
+    let month = padZero(date.getMonth() + 1);
+    let year = date.getFullYear() - 2000;
 
     // format day depending on the option
     let formattedDate = '';
