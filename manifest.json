@@ -18,7 +18,7 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-        "id": "exact-date@yt.com",
+        "id": "{ee8f34ff-10ed-4526-a129-e316253916a2}",
         "strict_min_version": "91.0"
     }
   },
