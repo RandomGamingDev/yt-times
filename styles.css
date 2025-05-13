@@ -1,0 +1,72 @@
+body {
+    font-family: Arial, sans-serif;
+    width: 250px;
+    padding: 20px;
+    margin: 0;
+    background-color: #f9f9f9;
+    color: #333;
+}
+h3 {
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+.option {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.option input {
+    margin-right: 10px;
+}
+#saveSettings {
+    background-color: #0078d7;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+}
+#saveSettings:hover {
+    background-color: #005fa3;
+}
+.modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    z-index: 1000;
+}
+.modal p {
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+.modal button {
+    background-color: #0078d7;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.modal button:hover {
+    background-color: #005fa3;
+}
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}

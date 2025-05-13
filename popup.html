@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Times Settings</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h3>Settings</h3>
+    <div class="option">
+        <input type="checkbox" id="originalMessage" />
+        <label for="originalMessage">Add date to original message</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" id="showTime" checked />
+        <label for="showTime">Show Time</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" id="defaultLocale" checked />
+        <label for="defaultLocale">Use Default Locale (overrides en-GB Day/Month/Year format)</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" id="dayFirst" />
+        <label for="dayFirst">Day/Month/Year Format (en-GB)</label>
+    </div>
+    <button id="saveSettings">Save settings</button>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="modal" id="confirmationModal">
+        <p>Sucesfully saved settings</p>
+        <button id="closeModal">Close</button>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
