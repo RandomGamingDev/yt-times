@@ -11,13 +11,13 @@ function format_date(date, options) {
         );
 }
 
-function replace_video_type_date(rel_elems, get_vid_id, get_date_elem, options) {
+function replace_video_type_date(rel_elems, get_vid_id, get_date_elem, options, ignoreCache = false) {
     const absDateClass = "absolute-date";
 
     for (const rel_elem of rel_elems) try {
         const date_elem = get_date_elem(rel_elem);
         
-        if (!date_elem.classList.contains(absDateClass)) {
+        if (ignoreCache || !date_elem.classList.contains(absDateClass)) {
             fetch(`https://www.youtube.com${get_vid_id(rel_elem)}`)
                 .then(res => res.text())
                 .then(txt => {
@@ -40,7 +40,7 @@ function replace_video_type_date(rel_elems, get_vid_id, get_date_elem, options) 
 }
 
 
-function replace_dates(options) { // IMPORTANT!!! Find out when to activate this (after YouTube's rendered its dynamic content)
+function replace_dates(options, ignoreCache = false) { // IMPORTANT: Find all cases of undetected DOM mutation or different UIs to guarantee that this works for all cases
     // Recommendation page type videos
     replace_video_type_date(
         document.querySelectorAll("a#video-title-link"),
@@ -54,7 +54,8 @@ function replace_dates(options) { // IMPORTANT!!! Find out when to activate this
                 .children[0] // div id="metadata"
                 .children[1] // div id="metadata-line"
                 .children[3], //span
-        options
+        options,
+        ignoreCache
     );
 
     // Side bar recommendations type videos
@@ -74,7 +75,8 @@ function replace_dates(options) { // IMPORTANT!!! Find out when to activate this
                 .children[0] // div id="metadata"
                 .children[1] // div id="metadata-line"
                 .children[3], // span
-        options
+        options,
+        ignoreCache
     );
 
     // Search type videos
@@ -91,7 +93,8 @@ function replace_dates(options) { // IMPORTANT!!! Find out when to activate this
                 .children[0] // div id="metadata"
                 .children[1] // div id="metadata-line"
                 .children[3], // span
-        options
+        options,
+        ignoreCache
     );
 
     // Playlist type videos
@@ -108,7 +111,8 @@ function replace_dates(options) { // IMPORTANT!!! Find out when to activate this
                 .children[0] // div id="byline-container"
                 .children[2] // yt-formatted-string id="video-info"
                 .children[2], // span
-        options
+        options,
+        ignoreCache
     );
 
     // Channel Home page videos
@@ -124,7 +128,8 @@ function replace_dates(options) { // IMPORTANT!!! Find out when to activate this
                 .children[0] // div id="metadata"
                 .children[1] // div id="metadata-line"
                 .children[1], // span
-        options
+        options,
+        ignoreCache
     );
 
     for (const info_elem of document.querySelectorAll("yt-formatted-string#info")) try {
@@ -154,19 +159,29 @@ const observer = new MutationObserver((mutations) => {
     DOMMutated = true;
 });
 
-
-
-observer.observe(document, { childList: true, subtree: true });
+observer.observe(document, { childList: true, subtree: true, attributes: true, attributeFilter: ["href"] });
 
 // In milliseconds
 const replaceDelay = 250;
+let ignoreCache = false;
 setInterval(
     function() {
         if (!DOMMutated)
             return;
 
-        replace_dates(userOptions);
+        replace_dates(userOptions, ignoreCache);
+
         DOMMutated = false;
+        ignoreCache = false;
+
+        const cdrClass = "cacheless-date-replace-event"
+        for (const sort of document.querySelectorAll("#chips[role='tablist'] > yt-chip-cloud-chip-renderer"))
+            if (!sort.classList.contains(cdrClass)) {
+                sort.addEventListener("click", () => {
+                    ignoreCache = true;
+                });
+                sort.classList.add(cdrClass);
+            }
     },
     replaceDelay
 );
