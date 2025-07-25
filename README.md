@@ -1,6 +1,6 @@
 # Youtube Times aka yt-times
-### A Firefox Extension that replaces the undescriptive youtube time with the exact absolute time of release. Perfect for all your Internet Historian needs!
-You can use it here: https://addons.mozilla.org/en-US/firefox/addon/youtube-times/ <br/><br/>
+### An Extension that replaces the undescriptive youtube time with the exact absolute time of release. Perfect for all your Internet Historian needs!
+### Available for [Chrome](https://chromewebstore.google.com/detail/youtube-times/nljlgijojihfhcmdaiheneoocgiookli?authuser=1&hl=en) & [Firefox](https://addons.mozilla.org/en-US/firefox/addon/youtube-times/) on Mobile & PC under the [MIT License](https://github.com/RandomGamingDev/yt-times/blob/main/LICENSE)
 ![image](https://github.com/RandomGamingDev/yt-times/assets/83996185/cec6f8b4-14e6-4672-8f6b-b12f0230d713)
 
 ## Results
