@@ -17,93 +17,120 @@ function format_date(date, options) {
         );
 }
 
-function replace_dates(options, ignoreCache = false) {
-    const absDateClass = "absolute-date";
+const dateCache = new Map();
+const fetchingSet = new Set();
 
+function replace_dates(options, ignoreCache = false) {
     const containers = new Set();
     const links = document.querySelectorAll('a[href^="/watch"]');
+    
+    // Log missed links once per cycle for debugging
+    let missedLinksLogged = 0;
+
     for (const link of links) {
-        const container = link.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-playlist-video-renderer');
-        if (container) containers.add(container);
+        const container = link.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-playlist-video-renderer, yt-lockup-view-model, ytd-item-section-renderer, ytd-rich-grid-media, ytd-reel-item-renderer');
+        if (container) {
+            containers.add(container);
+        } else if (missedLinksLogged < 5) {
+            // Find what the actual container is for links we are missing
+            let p = link.parentElement;
+            let path = "";
+            for (let k=0; k<5 && p; k++) {
+                path += p.tagName.toLowerCase() + (p.className ? '.'+p.className.split(' ').join('.') : '') + " -> ";
+                p = p.parentElement;
+            }
+            console.log("Missed link container path:", path, link);
+            missedLinksLogged++;
+        }
     }
 
-    if (containers.size > 0 && !ignoreCache) {
-        console.log(`Found ${containers.size} containers from ${links.length} links`);
-    }
-
-    let i = 0;
     for (const container of containers) try {
         const thumbnail = container.querySelector('a#thumbnail, a.ytd-thumbnail, a[href^="/watch"]');
         if (!thumbnail) continue;
         const href = thumbnail.getAttribute("href");
-        if (!href || href.includes("/shorts/")) continue; // Skip shorts for debugging
+        if (!href || href.includes("/shorts/")) continue; 
 
-        // Try to find the date element generically
-        let spans = Array.from(container.querySelectorAll('span.inline-metadata-item, span.ytd-video-meta-block, #metadata span, #metadata-line span')).filter(s => s.textContent.trim().length > 0);
+        const textNodesToUpdate = [];
+        let alreadyUpdated = false;
         
-        let date_elem = spans.length > 0 ? spans[spans.length - 1] : null;
+        const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+        let node;
+        while (node = walker.nextNode()) {
+            const val = node.nodeValue.trim();
+            if (val.length === 0) continue;
+            
+            const parent = node.parentElement;
+            if (parent && (parent.id === 'video-title' || parent.closest('#video-title, #video-title-link'))) {
+                continue; // Skip video titles that might coincidentally be "1 day ago"
+            }
 
-        if (!date_elem) {
-            // Aggressive fallback: get all spans in the container
-            const allSpans = Array.from(container.querySelectorAll('span')).filter(s => s.textContent.trim().length > 0);
-            if (allSpans.length > 0) {
-                date_elem = allSpans[allSpans.length - 1];
+            if (dateCache.has(href) && val.includes(dateCache.get(href))) {
+                alreadyUpdated = true;
+                continue; 
+            }
+            
+            // Match standard YouTube relative date strings
+            if (val.match(/(Streamed |Premiered )?\d+ (second|minute|hour|day|week|month|year)s? ago/i)) {
+                textNodesToUpdate.push(node);
             }
         }
-
-        if (!date_elem) { 
-            if (i===0) {
-                console.log("CRITICAL: Still no date_elem found for", href);
-                // Dump the flat DOM structure of this container to see what classes/IDs YouTube uses now
-                const domMap = Array.from(container.querySelectorAll('*'))
-                    .map(e => e.tagName.toLowerCase() + (e.id ? '#'+e.id : '') + (e.className && typeof e.className === 'string' ? '.'+e.className.replace(/ /g, '.') : ''))
-                    .join('\n');
-                console.log(domMap);
-            }
+        
+        if (alreadyUpdated && textNodesToUpdate.length === 0) {
             continue; 
         }
 
-        if (ignoreCache || !date_elem.classList.contains(absDateClass)) {
-            if (i<5) console.log("Fetching for", href, "using date_elem", date_elem);
-            i++;
-            // mark immediately to prevent duplicate fetches
-            date_elem.classList.add(absDateClass);
-
-            fetch(`https://www.youtube.com${href}`)
-                .then(res => res.text())
-                .then(txt => {
-                    const html = parser.parseFromString(txt, "text/html");
-                    const date = get_date_published(html);
-                    if (isNaN(date)) {
-                        date_elem.classList.remove(absDateClass);
-                        return;
-                    }
-                    const formattedDate = format_date(date, options);
-
+        if (textNodesToUpdate.length > 0) {
+            if (dateCache.has(href)) {
+                const formattedDate = dateCache.get(href);
+                for (const n of textNodesToUpdate) {
                     if (options.originalMessage) {
-                        if (!date_elem.textContent.includes(formattedDate)) {
-                            date_elem.textContent += ` (${formattedDate})`;
-                        }
+                        n.nodeValue = `${n.nodeValue.trim()} (${formattedDate})`;
                     } else {
-                        date_elem.textContent = formattedDate;
+                        n.nodeValue = formattedDate;
                     }
-                })
-                .catch(err => {
-                    console.error("Fetch/parse error:", err);
-                    date_elem.classList.remove(absDateClass);
-                });
+                }
+            } else if (!fetchingSet.has(href) || ignoreCache) {
+                fetchingSet.add(href);
+                
+                fetch(`https://www.youtube.com${href}`)
+                    .then(res => res.text())
+                    .then(txt => {
+                        const html = parser.parseFromString(txt, "text/html");
+                        const date = get_date_published(html);
+                        if (isNaN(date)) {
+                            fetchingSet.delete(href);
+                            return;
+                        }
+                        const formattedDate = format_date(date, options);
+                        dateCache.set(href, formattedDate);
+                    })
+                    .catch(err => {
+                        fetchingSet.delete(href);
+                    });
+            }
         }
     } catch (error) {
-        console.error("Error processing container:", error, container);
+        // fail silently for individual containers
     }
 
-    // Main video page
-    for (const info_elem of document.querySelectorAll("yt-formatted-string#info")) try {
-        const spans = Array.from(info_elem.children).filter(s => s.tagName.toLowerCase() === 'span');
-        if (spans.length >= 3) {
-            const date = get_date_published(document);
-            if (!isNaN(date)) {
-                spans[2].textContent = format_date(date, options);
+    // Main video page (New YouTube UI uses ytd-watch-metadata)
+    try {
+        const watchMetaSpans = document.querySelectorAll('ytd-watch-metadata span, ytd-watch-metadata yt-formatted-string, #description-inner span, #description-inner yt-formatted-string');
+        for (const span of watchMetaSpans) {
+            if (span.children.length === 0 && span.textContent.match(/(second|minute|hour|day|week|month|year)s? ago/i)) {
+                const date = get_date_published(document);
+                if (!isNaN(date)) {
+                    const formattedDate = format_date(date, options);
+                    if (!span.textContent.includes(formattedDate)) {
+                        if (options.originalMessage) {
+                            const baseText = span.textContent.replace(/\s*\(.*?\)$/, ''); 
+                            span.textContent = `${baseText} (${formattedDate})`;
+                        } else {
+                            span.textContent = formattedDate;
+                        }
+                    }
+                }
+                break; 
             }
         }
     } catch {}
